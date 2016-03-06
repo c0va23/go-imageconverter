@@ -56,8 +56,26 @@ func magickWandConvertImage(imageData []byte) ([]byte, error) {
 	return convertedImage, nil
 }
 
-func imageMagickCmdConvertImage(imageData []byte) ([]byte, error) {
-	cmd := exec.Command("convert", "-", "-resize", "800x600", "-")
+func convertCmdConvertImage(
+	command string,
+	imageData []byte,
+	prefixArgs ...string,
+) (
+	[]byte,
+	error,
+) {
+	cmd := exec.Command(
+		command,
+		append(
+			prefixArgs,
+			[]string{
+				"-",
+				"-resize",
+				"800x600",
+				"-",
+			}...,
+		)...,
+	)
 
 	cmd.Stdin = bytes.NewBuffer(imageData)
 
@@ -68,11 +86,20 @@ func imageMagickCmdConvertImage(imageData []byte) ([]byte, error) {
 	return convertedImageData, runErr
 }
 
+func imageMagickCmdConvertImage(imageData []byte) ([]byte, error) {
+	return convertCmdConvertImage("convert", imageData)
+}
+
+func graphicsmagickCmdConvertImage(imageData []byte) ([]byte, error) {
+	return convertCmdConvertImage("gm", imageData, "convert")
+}
+
 var converterName string
 
 const (
-	converterMagickwand  = "magickwand"
-	converterImagemagick = "imagemagick"
+	converterMagickwand     = "magickwand"
+	converterImageMagick    = "imagemagick"
+	converterGraphicsMagick = "graphicsmagick"
 )
 
 func init() {
@@ -84,8 +111,10 @@ func init() {
 	switch converterName {
 	case converterMagickwand:
 		converter = magickWandConvertImage
-	case converterImagemagick:
+	case converterImageMagick:
 		converter = imageMagickCmdConvertImage
+	case converterGraphicsMagick:
+		converter = graphicsmagickCmdConvertImage
 	default:
 		log.Fatalf("Invalid converter: %s", converterName)
 	}
