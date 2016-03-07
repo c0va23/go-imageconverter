@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -94,7 +95,9 @@ func graphicsmagickCmdConvertImage(imageData []byte) ([]byte, error) {
 	return convertCmdConvertImage("gm", imageData, "convert")
 }
 
+// Command line options
 var converterName string
+var listen string
 
 const (
 	converterMagickwand     = "magickwand"
@@ -103,8 +106,22 @@ const (
 )
 
 func init() {
-	flag.StringVar(&converterName, "converter", "magickwand", "Converter: magickwand or imagemagick")
+	flag.StringVar(
+		&converterName,
+		"converter",
+		"magickwand",
+		fmt.Sprintf(
+			"Converter: %v",
+			[]string{
+				converterMagickwand,
+				converterImageMagick,
+				converterGraphicsMagick,
+			},
+		),
+	)
 	flag.Parse()
+
+	flag.StringVar(&listen, "listen", "[::]:5050", "Listen address ip:port")
 
 	log.Printf("Args: %v", os.Args)
 
@@ -127,7 +144,8 @@ func main() {
 		defer imagick.Terminate()
 	}
 
-	serverErr := http.ListenAndServe("[::]:5050", http.HandlerFunc(handler))
+	log.Printf("Start listen on %s", listen)
+	serverErr := http.ListenAndServe(listen, http.HandlerFunc(handler))
 	if nil != serverErr {
 		panic(serverErr)
 	}
