@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 	"os/exec"
 
 	"gopkg.in/gographics/imagick.v2/imagick"
@@ -119,11 +118,10 @@ func init() {
 			},
 		),
 	)
+
+	flag.StringVar(&listen, "listen", ":5050", "Listen address ip:port")
+
 	flag.Parse()
-
-	flag.StringVar(&listen, "listen", "[::]:5050", "Listen address ip:port")
-
-	log.Printf("Args: %v", os.Args)
 
 	switch converterName {
 	case converterMagickwand:
