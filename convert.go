@@ -16,22 +16,14 @@ func convertArgs(width, heigth uint) []string {
 }
 
 func convertCmdConvertImage(
-	command string,
+	cmd *exec.Cmd,
 	imageData []byte,
 	width, height uint,
-	prefixArgs ...string,
 ) (
 	[]byte,
 	error,
 ) {
-	cmd := exec.Command(
-		command,
-		append(
-			prefixArgs,
-			convertArgs(width, height)...,
-		)...,
-	)
-
+	cmd.Args = append(cmd.Args, convertArgs(width, height)...)
 	cmd.Stdin = bytes.NewBuffer(imageData)
 
 	convertedImageData, runErr := cmd.Output()
@@ -42,9 +34,11 @@ func convertCmdConvertImage(
 }
 
 func imageMagickCmdConvertImage(imageData []byte, width, height uint) ([]byte, error) {
-	return convertCmdConvertImage("convert", imageData, width, height)
+	cmd := exec.Command("convert")
+	return convertCmdConvertImage(cmd, imageData, width, height)
 }
 
 func graphicsmagickCmdConvertImage(imageData []byte, width, height uint) ([]byte, error) {
-	return convertCmdConvertImage("gm", imageData, width, height, "convert")
+	cmd := exec.Command("gm", "convert")
+	return convertCmdConvertImage(cmd, imageData, width, height)
 }
