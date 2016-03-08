@@ -12,8 +12,6 @@ import (
 	"gopkg.in/gographics/imagick.v2/imagick"
 )
 
-const imagesDir = "data/"
-
 var converter func(imageDate []byte) (output []byte, err error)
 
 func handler(responseWriter http.ResponseWriter, request *http.Request) {
@@ -34,7 +32,7 @@ func handler(responseWriter http.ResponseWriter, request *http.Request) {
 }
 
 func fetchOriginImage(imagePath string) ([]byte, error) {
-	return ioutil.ReadFile(imagesDir + imagePath)
+	return ioutil.ReadFile(imagesDir + "/" + imagePath)
 }
 
 func magickWandConvertImage(imageData []byte) ([]byte, error) {
@@ -46,7 +44,12 @@ func magickWandConvertImage(imageData []byte) ([]byte, error) {
 		return nil, readErr
 	}
 
-	if resizeErr := magickWand.ResizeImage(800, 600, imagick.FILTER_LANCZOS, 1.0); nil != resizeErr {
+	if resizeErr := magickWand.ResizeImage(
+		outWidth,
+		outHeigth,
+		imagick.FILTER_LANCZOS,
+		1.0,
+	); nil != resizeErr {
 		log.Printf("Error resize: %s", resizeErr)
 		return nil, resizeErr
 	}
@@ -70,8 +73,7 @@ func convertCmdConvertImage(
 			prefixArgs,
 			[]string{
 				"-",
-				"-resize",
-				"800x600",
+				"-resize", fmt.Sprintf("%dx%d", outWidth, outHeigth),
 				"-",
 			}...,
 		)...,
@@ -97,6 +99,9 @@ func graphicsmagickCmdConvertImage(imageData []byte) ([]byte, error) {
 // Command line options
 var converterName string
 var listen string
+var imagesDir string
+var outWidth uint
+var outHeigth uint
 
 const (
 	converterMagickwand     = "magickwand"
@@ -104,22 +109,20 @@ const (
 	converterGraphicsMagick = "graphicsmagick"
 )
 
+var converters = []string{
+	converterMagickwand,
+	converterImageMagick,
+	converterGraphicsMagick,
+}
+
 func init() {
-	flag.StringVar(
-		&converterName,
-		"converter",
-		"magickwand",
-		fmt.Sprintf(
-			"Converter: %v",
-			[]string{
-				converterMagickwand,
-				converterImageMagick,
-				converterGraphicsMagick,
-			},
-		),
-	)
+	flag.StringVar(&converterName, "converter", converterMagickwand,
+		fmt.Sprintf("Converter: %v", converters))
 
 	flag.StringVar(&listen, "listen", ":5050", "Listen address ip:port")
+	flag.StringVar(&imagesDir, "images-dir", "data", "Images root directory")
+	flag.UintVar(&outWidth, "out-width", 800, "Out width")
+	flag.UintVar(&outHeigth, "out-heigth", 600, "Out heigth")
 
 	flag.Parse()
 
@@ -134,6 +137,8 @@ func init() {
 		log.Fatalf("Invalid converter: %s", converterName)
 	}
 	log.Printf("Used converter: %s", converterName)
+	log.Printf("Images root dir: %s", imagesDir)
+	log.Printf("Out width x heigth: %d x %d", outWidth, outHeigth)
 }
 
 func main() {
