@@ -18,12 +18,14 @@ const (
 	converterMagickwand     = "magickwand"
 	converterImageMagick    = "imagemagick"
 	converterGraphicsMagick = "graphicsmagick"
+	converterMagick         = "magick"
 )
 
 var converters = []string{
 	converterMagickwand,
 	converterImageMagick,
 	converterGraphicsMagick,
+	converterMagick,
 }
 
 func init() {
@@ -52,6 +54,8 @@ func findConverter() {
 		converter = imageMagickCmdConvertImage
 	case converterGraphicsMagick:
 		converter = graphicsmagickCmdConvertImage
+	case converterMagick:
+		converter = magickConverter
 	default:
 		log.Fatalf("Invalid converter: %s", converterName)
 	}

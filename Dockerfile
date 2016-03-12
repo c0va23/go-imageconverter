@@ -1,6 +1,11 @@
 FROM golang:1.6
 
-RUN apt-get update && apt-get install -y libmagickwand-dev imagemagick graphicsmagick
+RUN apt-get update && apt-get install -y \
+  libmagickwand-dev \
+  libgraphicsmagick-dev \
+  libgif-dev \
+  imagemagick \
+  graphicsmagick
 
 ENV OMP_NUM_THREADS=1
 
