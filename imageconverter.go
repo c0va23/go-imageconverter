@@ -9,7 +9,7 @@ import (
 )
 
 // Converter is type function for convert image from imageDate to width x heigth
-type Converter func(imageDate []byte, width, heigth uint) (output []byte, err error)
+type Converter func(imageDate []byte, width, height uint) (output []byte, err error)
 
 func handler(responseWriter http.ResponseWriter, request *http.Request) {
 	imagePath := request.RequestURI[1:]
