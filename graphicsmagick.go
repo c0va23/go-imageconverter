@@ -1,43 +1,66 @@
+// +build !cmd,gm
+
 package main
 
 import (
-	"bytes"
 	"log"
-
-	"github.com/rainycape/magick"
+	"unsafe"
 )
 
-func init() {
-	log.Printf("Magick use %s backend", magick.Backend())
+/// # include <stdio.h>
+/// # include <string.h>
+/// # include <stdlib.h>
+
+// #cgo pkg-config: GraphicsMagick
+// #include <magick/api.h>
+import "C"
+
+const converterName = "graphicsmagick"
+
+func converterInitialize() {
+	C.InitializeMagick(nil)
 }
 
-func magickConverter(imageDate []byte, width, height uint) (output []byte, err error) {
-	image, decodeErr := magick.DecodeData(imageDate)
+func converterTerminate() {
+	C.DestroyMagick()
+}
 
-	if nil != decodeErr {
-		log.Printf("Error decode: %s", decodeErr)
-		return nil, decodeErr
-	}
-	log.Println("Image decoded")
+func converter(imageDate []byte, width, height uint) (output []byte, err error) {
+	var exception C.ExceptionInfo
+	C.GetExceptionInfo(&exception)
+	defer C.DestroyExceptionInfo(&exception)
 
-	resizedImage, resizeErr := image.Resize(int(width), int(height), magick.FMitchell)
-	if nil != resizeErr {
-		log.Printf("Error resize %s", resizeErr)
-		return nil, resizeErr
-	}
-	log.Println("Image resized")
+	inImageInfo := C.CloneImageInfo(nil)
+	defer C.DestroyImageInfo(inImageInfo)
 
-	outBuffer := new(bytes.Buffer)
+	inBlob := unsafe.Pointer(&imageDate[0])
+	inLenght := C.size_t(len(imageDate))
+	inImage := C.BlobToImage(inImageInfo, inBlob, inLenght, &exception)
+	C.CatchException(&exception)
+	defer C.DestroyBlob(inImage)
+	defer C.DestroyImage(inImage)
 
-	outInfo := magick.NewInfo()
-	outInfo.SetFormat("jpeg")
-	// outInfo.SetQuality(75)
+	outImage := C.ScaleImage(
+		inImage,
+		C.ulong(width),
+		C.ulong(height),
+		&exception,
+	)
+	C.CatchException(&exception)
+	defer C.DestroyImage(outImage)
 
-	encodeErr := resizedImage.Encode(outBuffer, outInfo)
-	if nil != encodeErr {
-		log.Printf("Error encode: %s", encodeErr)
-		return nil, encodeErr
-	}
+	outImageInfo := C.CloneImageInfo(inImageInfo)
+	defer C.DestroyImageInfo(outImageInfo)
 
-	return outBuffer.Bytes(), nil
+	var outLength C.size_t
+	var outBlob unsafe.Pointer
+	outBlob = C.ImageToBlob(outImageInfo, outImage, &outLength, &exception)
+	C.CatchException(&exception)
+	defer C.DestroyBlob(outImage)
+
+	outData := C.GoBytes(outBlob, C.int(outLength))
+
+	log.Printf("Out image size: %d", len(outData))
+
+	return outData, nil
 }
