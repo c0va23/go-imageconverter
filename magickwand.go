@@ -1,3 +1,5 @@
+// +build !cmd,im
+
 package main
 
 import (
@@ -6,7 +8,17 @@ import (
 	"gopkg.in/gographics/imagick.v2/imagick"
 )
 
-var magickWandConvertImage Converter = func(
+const converterName = "magickwand"
+
+func converterInitialize() {
+	imagick.Initialize()
+}
+
+func converterTerminate() {
+	defer imagick.Terminate()
+}
+
+func converter(
 	imageData []byte,
 	width, heigth uint,
 ) (

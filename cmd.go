@@ -1,3 +1,5 @@
+// +build cmd
+
 package main
 
 import (
@@ -6,6 +8,10 @@ import (
 	"log"
 	"os/exec"
 )
+
+func converterInitialize() {}
+
+func converterTerminate() {}
 
 func convertArgs(width, heigth uint) []string {
 	return []string{
@@ -31,14 +37,4 @@ func convertCmdConvertImage(
 		log.Printf("Error output: %s", runErr)
 	}
 	return convertedImageData, runErr
-}
-
-func imageMagickCmdConvertImage(imageData []byte, width, height uint) ([]byte, error) {
-	cmd := exec.Command("convert")
-	return convertCmdConvertImage(cmd, imageData, width, height)
-}
-
-func graphicsmagickCmdConvertImage(imageData []byte, width, height uint) ([]byte, error) {
-	cmd := exec.Command("gm", "convert")
-	return convertCmdConvertImage(cmd, imageData, width, height)
 }

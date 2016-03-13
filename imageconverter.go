@@ -4,8 +4,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-
-	"gopkg.in/gographics/imagick.v2/imagick"
 )
 
 // Converter is type function for convert image from imageDate to width x heigth
@@ -37,10 +35,9 @@ func fetchOriginImage(imagePath string) ([]byte, error) {
 }
 
 func main() {
-	if converterName == converterMagickwand {
-		imagick.Initialize()
-		defer imagick.Terminate()
-	}
+	log.Printf("Used converter: %s", converterName)
+	converterInitialize()
+	defer converterTerminate()
 
 	log.Printf("Start listen on %s", listen)
 	serverErr := http.ListenAndServe(listen, http.HandlerFunc(handler))
