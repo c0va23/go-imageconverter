@@ -3,6 +3,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"unsafe"
 )
@@ -28,11 +29,24 @@ func converter(imageDate []byte, width, height uint) (output []byte, err error) 
 
 	inBlob := unsafe.Pointer(&imageDate[0])
 	inLenght := len(imageDate)
-	readBlobResult := C.MagickReadImageBlob(magickWand, (*C.uchar)(inBlob), C.size_t(inLenght))
-	log.Printf("MagickReadImageBlob: %v", readBlobResult)
 
-	scaleImageResult := C.MagickScaleImage(magickWand, C.ulong(width), C.ulong(height))
-	log.Printf("MagickScaleImage: %v", scaleImageResult)
+	if readBlobResult := C.MagickReadImageBlob(
+		magickWand,
+		(*C.uchar)(inBlob),
+		C.size_t(inLenght),
+	); C.MagickPass != readBlobResult {
+		// TODO: Use C.MagickGetException for full message
+		return nil, fmt.Errorf("Error read blob")
+	}
+
+	if scaleImageResult := C.MagickScaleImage(
+		magickWand,
+		C.ulong(width),
+		C.ulong(height),
+	); C.MagickPass != scaleImageResult {
+		// TODO: Use C.MagickGetException for full message
+		return nil, fmt.Errorf("Error scale image")
+	}
 
 	var outLength C.size_t
 	outBlob := unsafe.Pointer(C.MagickWriteImageBlob(magickWand, &outLength))
