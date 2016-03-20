@@ -16,7 +16,7 @@ func converterTerminate() {}
 func convertArgs(width, heigth uint) []string {
 	return []string{
 		"-",
-		"-resize", fmt.Sprintf("%dx%d", width, heigth),
+		"-scale", fmt.Sprintf("%dx%d", width, heigth),
 		"-",
 	}
 }
