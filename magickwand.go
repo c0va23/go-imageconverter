@@ -21,14 +21,12 @@ var magickWandConvertImage Converter = func(
 		return nil, readErr
 	}
 
-	if resizeErr := magickWand.ResizeImage(
+	if scaleErr := magickWand.ScaleImage(
 		width,
 		heigth,
-		imagick.FILTER_LANCZOS,
-		1.0,
-	); nil != resizeErr {
-		log.Printf("Error resize: %s", resizeErr)
-		return nil, resizeErr
+	); nil != scaleErr {
+		log.Printf("Error scale: %s", scaleErr)
+		return nil, scaleErr
 	}
 
 	convertedImage := magickWand.GetImageBlob()
