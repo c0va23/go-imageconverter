@@ -1,6 +1,7 @@
 // +build !cmd
 // +build !im
 // +build !gm
+// +build !vips
 
 package main
 
